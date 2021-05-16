@@ -1,19 +1,21 @@
 import jwt_decode from 'jwt-decode';
 import setAuthToken from './setAuthToken';
-import storage from './storage';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const authTokenPresent = async () => {
     try {
-        const ret = await storage.load({ key: 'jwtToken' });
-		if (ret.token) {
-			const decoded = jwt_decode(ret.token);
+        const token = await AsyncStorage.getItem('@jwtToken');
+		if (token) {
+			const decoded = jwt_decode(token);
 			if (Date.now() / 1000 < decoded.exp) {
-				setAuthToken(ret.token);
+				setAuthToken(token);
 				return decoded;
 			}
 		}
+        setAuthToken(false);
 		return false;
     } catch (error) {
+        setAuthToken(false);
         return false;
     }
     

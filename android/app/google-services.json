@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "548458715952",
+    "project_id": "cowin-automation-f71ae",
+    "storage_bucket": "cowin-automation-f71ae.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:548458715952:android:270ff5a8c8cb7c73ebc6f5",
+        "android_client_info": {
+          "package_name": "com.cowin_automation"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "548458715952-h7s5mletgf6gj51ruek67l93op3m53se.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCAXyjkPTej-nkQaNsU7Hl7pDCPYk0ahqU"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "548458715952-h7s5mletgf6gj51ruek67l93op3m53se.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

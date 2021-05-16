@@ -2,18 +2,15 @@ import React, { useState, useEffect } from 'react';
 import { StyleSheet, Text, View, TextInput, TouchableOpacity, ScrollView, Switch, Dimensions } from 'react-native';
 import { Picker } from '@react-native-picker/picker';
 import { NeomorphFlex } from 'react-native-neomorph-shadows';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import DeviceInfo from 'react-native-device-info';
 import axios from 'axios';
-import superagent from 'superagent';
 import isEmpty from '../utils/isEmpty';
-import storage from '../utils/storage';
 import setAuthToken from '../utils/setAuthToken';
 import authTokenPresent from '../utils/authTokenPresent';
 
 const SignupScreen = ({ navigation }) => {
-    useEffect(async () => {
-		if (await authTokenPresent()) navigation.navigate('Home');
-	});
+    useEffect(async () => (await authTokenPresent() ? navigation.navigate('Home') : null));
 	
 	const [name, setName] = React.useState(null);
 	const [number, setNumber] = React.useState(null);
@@ -75,13 +72,12 @@ const SignupScreen = ({ navigation }) => {
 
 	const onChangeState = async (itemValue) => {
 		if (itemValue === '0') return;
-		/* const choice = JSON.parse(itemValue);
+		const choice = JSON.parse(itemValue);
         setSelectedState(choice.state_name);
-        const distRes = await axios.get(
+        /* const distRes = await axios.get(
 			`https://cdn-api.co-vin.in/api/v2/admin/location/districts/${choice.state_id}`,
 		);
-        districts = distRes.json();
-        setSelectedDistrict(null); */
+        districts = distRes.json(); */
 
 		setDistrictList([
 			{ district_id: 320, district_name: 'Agar' },
@@ -136,6 +132,8 @@ const SignupScreen = ({ navigation }) => {
 			{ district_id: 329, district_name: 'Umaria' },
 			{ district_id: 355, district_name: 'Vidisha' },
 		]);
+
+        setSelectedDistrict(null);
 	};
 
 	const onChangeDistrict = async (itemValue) => {
@@ -148,12 +146,12 @@ const SignupScreen = ({ navigation }) => {
 
 	const onSubmit = async () => {
 		const uniqueID = await DeviceInfo.getUniqueId();
-		console.log(uniqueID);
 		const details = {
-			mobile: number,
+            mobile: number,
 			pin: PIN,
 			state: selectedState,
 			district: selectedDistrict,
+			token: await AsyncStorage.getItem('@firebasePushToken'),
 			name,
 			is45Plus,
 			prefferedVaccine,
@@ -161,14 +159,15 @@ const SignupScreen = ({ navigation }) => {
 			prefferedTime,
 			uniqueID,
 		};
-		console.log(details);
-		/* const subRes = await axios.post('/auth/signup', details);
-		const { token } = await subRes.data;
-		storage.save({
-			key: 'jwtToken',
-			data: { token },
-		});
-		setAuthToken(token); */
+        try {
+            const subRes = await axios.post('/auth/signup', details);
+			const { token } = subRes.data;
+            await AsyncStorage.setItem('@jwtToken', token);
+			setAuthToken(token);
+			navigation.navigate('Home');
+        } catch (error) {
+            console.error(error);
+        }
 	};
 
 	return (
