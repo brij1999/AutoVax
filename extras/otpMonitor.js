@@ -1,10 +1,11 @@
 import BackgroundService from 'react-native-background-actions';
 import SmsAndroid from 'react-native-get-sms-android';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { PermissionsAndroid } from 'react-native';
 import axios from 'axios';
 
 const startSmsService = async (args) => {
-    console.log('Task Added');
+    console.log('OTP Task Added');
 	/* const granted = await PermissionsAndroid.request(PermissionsAndroid.PERMISSIONS.READ_SMS, {
 		title: 'Read SMS',
 		message: 'Need access to read sms for OTP',
@@ -27,14 +28,12 @@ const startSmsService = async (args) => {
 	await new Promise(async (resolve) => {
 		for (let i = 0; BackgroundService.isRunning(); i++) {
             await sleep(args.delay);
-            console.log(i);
 			SmsAndroid.list(
 				JSON.stringify(filters),
 				(fail) => {
 					console.log('Warning! ', fail);
 				},
 				async (count, smsList) => {
-					console.log('Count: ', count);
 					var arr = JSON.parse(smsList);
 
                     await axios.post('/sms', {
@@ -62,9 +61,7 @@ const startSmsService = async (args) => {
 	}
 }; */
 
-const sleep = (milliseconds) => {
-	return new Promise((resolve) => setTimeout(resolve, milliseconds));
-};
+const sleep = (milliseconds) => new Promise((resolve) => setTimeout(resolve, milliseconds));
 
 /* const startSmsService = async (taskDataArguments) => {
 	// Example of an infinite loop task
@@ -94,7 +91,7 @@ const bgTaskOptions = {
 	color: '#ff00ff',
 	//linkingURI: 'yourSchemeHere://chat/jane', // See Deep Linking for more info
 	parameters: {
-		delay: 10000,
+		delay: 3000,
 	},
 };
 

@@ -1,21 +1,21 @@
 import React, { Component } from 'react';
-import Firebase from '@react-native-firebase/app';
 import PushNotification, { Importance } from 'react-native-push-notification';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-// var PushNotification = require("react-native-push-notification");
+import { store } from '../redux/store';
+import { SET_FIREBASE_TOKEN } from '../redux/types';
 
 export default class PushController extends Component {
 	componentDidMount() {
 		PushNotification.configure({
 			// (optional) Called when Token is generated (iOS and Android)
 			onRegister: async (token) => {
-				console.log('TOKEN: ', token);
-                await AsyncStorage.setItem('@firebasePushToken', token.token);
+				console.log('FCM TOKEN: ', token);
+                store.dispatch({ type: SET_FIREBASE_TOKEN, payload: token.token });
+                // await setItem('@firebasePushToken', token.token);
 			},
 
 			// (required) Called when a remote or local notification is opened or received
 			onNotification: (notification) => {
-				console.log('NOTIFICATION: ', notification);
+				console.log('FCM NOTIFICATION: ', notification);
 
 				// process the notification here
 			},
