@@ -16,7 +16,6 @@ const otpFetchService = async () => {
 
     if (granted !== PermissionsAndroid.RESULTS.GRANTED) {
 		console.log('SEND_SMS permissions denied');
-        await BackgroundService.stop();
         return;
 	}
 

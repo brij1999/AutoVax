@@ -3,6 +3,7 @@ import React, { useState, useEffect, Fragment } from 'react';
 import { Provider } from 'react-redux';
 import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
+import SplashScreen from './components/SplashScreen';
 import HomeScreen from './components/HomeScreen';
 import PrefsScreen from './components/PrefsScreen';
 import { PersistGate } from 'redux-persist/integration/react';
@@ -15,7 +16,8 @@ const App = () => {
 		<Provider store={store}>
 			<PersistGate loading={null} persistor={persistor}>
 				<NavigationContainer>
-					<Stack.Navigator initialRouteName='HomeScreen' headerMode='none'>
+					<Stack.Navigator initialRouteName='SplashScreen' headerMode='none'>
+						<Stack.Screen name='SplashScreen' component={SplashScreen} />
 						<Stack.Screen name='HomeScreen' component={HomeScreen} />
 						<Stack.Screen name='PrefsScreen' component={PrefsScreen} />
 					</Stack.Navigator>

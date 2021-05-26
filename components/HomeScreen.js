@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, Fragment } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
 	StyleSheet,
 	Text,
@@ -20,8 +20,8 @@ import floatingNotify from '../utils/floatingNotify';
 import { authTokenPresent } from '../utils/authUtils';
 import { setSelectedDate } from '../redux/actions/User Actions';
 import { setStatus, setTokenBotGo, setAutoBotGo } from '../redux/actions/Auto Actions';
-import { deployTokenBot, removeToken } from '../scripts/authScripts';
-import { deployAutoBot, stopFetchSlots } from '../scripts/autoScripts';
+import { deployTokenBot, haltTokenBot } from '../scripts/authScripts';
+import { deployAutoBot, haltAutoBot } from '../scripts/autoScripts';
 import PushNotification from 'react-native-push-notification';
 
 const windowWidth = Dimensions.get('window').width;
@@ -150,19 +150,6 @@ const HomeScreen = ({ navigation }) => {
 	}, []);
 
 	const mainBtnPress = async () => {
-        // PushNotification.localNotification({
-        //     channelId: 'slot_info',
-		// 	autoCancel: true,
-		// 	bigText: 'This is local notification demo in React Native app. Only shown, when expanded.',
-		// 	subText: 'Local Notification Demo',
-		// 	title: 'Local Notification Title',
-		// 	message: 'Expand me to see more',
-		// 	vibrate: true,
-		// 	vibration: 300,
-		// 	playSound: true,
-		// 	soundName: 'default',
-		// 	actions: '["Yes", "No"]',
-		// });
 		if (isEmpty(prefs.date)) {
 			setOpenDatePopup(true);
 			dispatch(setStatus("... Idle ... \nPress the 'Power Button' to begin.", 'B'));
@@ -195,7 +182,8 @@ const HomeScreen = ({ navigation }) => {
 
 	const automationStop = async () => {
 		try {
-			stopFetchSlots();
+			haltAutoBot();
+            haltTokenBot();
 		} catch (error) {
 			console.log('Error <automationStop>:\n', error, '\n', error.stack);
 			floatingNotify('Something Went Wrong!');
@@ -321,7 +309,7 @@ const HomeScreen = ({ navigation }) => {
 							{center.sessions
 								.filter((s) => s.available_capacity > 0)
 								.map((s) => (
-									<View style={styles.centerSession} key={center.name + s.date}>
+									<View style={styles.centerSession} key={s.session_id}>
 										<Text style={styles.sessionDate}>{s.date + ' :'}</Text>
 										<Text style={styles.sessionDose1}>
 											{'1st Dose: ' + s.available_capacity_dose1}
@@ -627,6 +615,7 @@ const styles = StyleSheet.create({
 	},
 	dateBoxText: {
 		textAlign: 'center',
+        fontWeight: 'bold',
 	},
 	dateIcon: {
 		backgroundColor: '#555',

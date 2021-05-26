@@ -1,4 +1,3 @@
-import BackgroundTimer from 'react-native-background-timer';
 import axios from 'axios';
 import JSSoup from 'jssoup';
 import isEmpty from '../utils/isEmpty';
@@ -14,48 +13,62 @@ import {
 	setSlotIntervalId,
 	setSlotDetails,
 	setStatus,
-	setBooking,
 } from '../redux/actions/Auto Actions';
+
+const delay = (seconds) => new Promise((resolve) => setTimeout(resolve, seconds * 1000));
 
 export const deployAutoBot = async () => {
 	const state = store.getState();
 	try {
 		if (!state.auto.autoBotGo) return;
 		await getBeneficiaries();
-		await fetchSlots();
-		const slotIntervalId = BackgroundTimer.setInterval(fetchSlots, SLOT_FETCH_INTERVAL * 1000);
-		store.dispatch(setSlotIntervalId(slotIntervalId));
+		await startFetchSlots();
 	} catch (error) {
 		console.log('Error <deployAutoBot>:\n', error, '\n', error.stack);
 		floatingNotify('Something Went Wrong!');
 	}
 };
 
-export const haltAutoBot = async () => {
+const startFetchSlots = async () => {
 	const state = store.getState();
+	if (state.auto.slotIntervalId) return;
 	try {
-		if (state.auto.autoBotGo) return;
-		console.log('>>> Halting Auto Bot.');
-		const slotIntervalId = state.auto.slotIntervalId;
-		BackgroundTimer.clearInterval(slotIntervalId);
-		store.dispatch(setSlotIntervalId(null));
+		await fetchSlots();
+		const slotIntervalId = setInterval(fetchSlots, SLOT_FETCH_INTERVAL * 1000);
+		store.dispatch(setSlotIntervalId(slotIntervalId));
 	} catch (error) {
-		console.log('Error <haltAutoBot>:\n', error, '\n', error.stack);
-		// floatingNotify('Something Went Wrong!');
+		console.log('Error <startFetchSlots>:\n', error, '\n', error.stack);
+		floatingNotify('Something Went Wrong!');
+		stopFetchSlots();
 	}
 };
 
 const fetchSlots = async () => {
 	const state = store.getState();
+	// PushNotification.localNotification({
+	// 	channelId: 'slot_info', // (required) channelId, if the channel doesn't exist, notification will not trigger.
+	// 	ticker: 'Congrats!!! Sussessfully Booked Your Vaccination Slot. 🤘', // (optional)
+	// 	bigText: 'My big text that will be shown when notification is expanded', // (optional) default: "message" prop
+	// 	subText: 'This is a subText', // (optional) default: none
+	// 	color: 'red', // (optional) default: system default
+	// 	vibrate: true, // (optional) default: true
+	// 	vibration: 300, // vibration length in milliseconds, ignored if vibrate=false, default: 1000
+	// 	actions: ['View Slots'], // (Android only) See the doc for notification actions to know more
+	// 	invokeApp: true, // (optional) This enable click on actions to bring back the application to foreground or stay in background, default: true
+	// });
+
+	if (!state.auto.autoBotGo) return;
 	try {
+		store.dispatch(setStatus('Fetching...'));
 		const prefs = state.user;
 		const params = { district_id: prefs.district, date: prefs.date };
 		const res = await axios.get(API_SLOTS_FETCH, { params });
-		const centers = res.data.centers;
+		const centers = res.data['centers'];
 		await check(centers);
 	} catch (error) {
 		console.log('Error <fetchSlots>:\n', error, '\n', error.stack);
 		floatingNotify('Something Went Wrong!');
+		stopFetchSlots();
 	}
 };
 
@@ -66,14 +79,9 @@ const getPincodes = (pins) => {
 	return p.split(',').map((pc) => Number(pc));
 };
 
-function getRandomInt(min, max) {
-	min = Math.ceil(min);
-	max = Math.floor(max);
-	return Math.floor(Math.random() * (max - min + 1)) + min;
-}
-
 const check = async (centers) => {
 	const state = store.getState();
+	if (!state.auto.autoBotGo) return;
 	try {
 		const prefs = state.user;
 		const age = prefs.is45Plus ? 45 : 18;
@@ -81,7 +89,7 @@ const check = async (centers) => {
 		const vaccine = prefs.prefferedVaccine;
 		const pincodes = getPincodes(prefs.PIN);
 		let count = 0;
-		let available = centers.filter((center) => {
+		const available = centers.filter((center) => {
 			count += center['sessions'][0]['min_age_limit'] === age;
 			if (pincodes && !pincodes.includes(center['pincode'])) return false;
 			if (fees && fees !== center['fee_type'].toLowerCase()) return false;
@@ -94,27 +102,27 @@ const check = async (centers) => {
 				);
 			});
 		});
-
-		const session = available.length > 0 && available[getRandomInt(0, available.length - 1)]['sessions'][0];
-		store.dispatch(setSlotDetails(count, available, session));
+		const session = available.length > 0 && available[0]['sessions'][0];
 		console.log({ count, available, session });
+		store.dispatch(setSlotDetails(count, available, session));
 		if (count === 0) {
 			store.dispatch(setStatus(`No centers listed for ${age}+ age group found in your district 😔`, 'B'));
 		} else if (available.length === 0) {
 			store.dispatch(
 				setStatus(
 					`Found ${count} centers listed for ${age}+ age group in your district, and all of them are fully booked right now 😕`,
-					'B',
+					'R',
 				),
 			);
 		} else {
 			const msg = `Found ${count} centers that have available slots listed for ${age}+ age group in your district.`;
 			store.dispatch(setStatus(msg, 'G'));
+
 			PushNotification.localNotification({
 				channelId: 'slot_info',
 				autoCancel: true,
 				title: 'Slots found for your profile!!!',
-				subText: 'Slots Found!',
+				subText: 'CoWIN Automation',
 				message: 'Expand me to see more',
 				bigText: msg,
 				vibrate: true,
@@ -124,10 +132,12 @@ const check = async (centers) => {
 				actions: '["Open App"]',
 			});
 		}
+		await delay(1);
 		await book();
 	} catch (error) {
 		console.log('Error <check>:\n', error, '\n', error.stack);
 		floatingNotify('Something Went Wrong!');
+		stopFetchSlots();
 	}
 };
 
@@ -160,15 +170,17 @@ const getCaptcha = async () => {
 
 const book = async () => {
 	const state = store.getState();
+	if (!state.auto.autoBotGo) return;
 	try {
 		if (!state.user.auth.token || !state.auto.session) return;
 		const session = state.auto.session;
 		const params = state.auto.bookingParams;
 		const dose = params.dose;
 		const beneficiaries = params.ben;
-		const session_id = session.session_id;
-		const slot = session.slots[0];
+		const session_id = session['session_id'];
+		const slot = session['slots'][0];
 		const captcha = await getCaptcha();
+		stopFetchSlots();
 
 		try {
 			const res = await axios.post(API_SCHEDULE, { dose, session_id, slot, beneficiaries, captcha });
@@ -179,9 +191,9 @@ const book = async () => {
 				channelId: 'slot_info',
 				autoCancel: true,
 				title: 'Slots Booked!!!',
-				subText: 'Appointment Booked!',
-				message: 'Expand me to see more',
-				bigText: `Congrats!!! Sussessfully Booked Your Vaccination Slot. 🤘`,
+				subText: 'CoWIN Automation',
+				message: `Congrats!!! Sussessfully Booked Your Vaccination Slot. 🤘`,
+				bigText: msg,
 				vibrate: true,
 				vibration: 300,
 				playSound: true,
@@ -191,20 +203,52 @@ const book = async () => {
 			const c = available[0];
 			store.dispatch(setBooking(c));
 		} catch (e) {
-            if(isEmpty(e.response)) {
-                console.log({ e });
-                console.log(e.stack);
-            } else {
-                const error = e.response.data.error;
-				store.dispatch(setStatus(error, 'R'));
-				console.log('<CoWIN Book Error>: ', error);
-            }
+			const error = e.response.data.error;
+			console.log('<CoWIN Book Error>: ', error);
+			if (state.auto.autoBotGo && isEmpty(state.auto.booking)) await startFetchSlots();
 		}
 	} catch (error) {
 		console.log('Error <book>:\n', error, '\n', error.stack);
 		floatingNotify('Something Went Wrong!');
+		stopFetchSlots();
 	}
 };
+
+export const stopFetchSlots = () => {
+	const state = store.getState();
+	try {
+		const slotIntervalId = state.auto.slotIntervalId;
+		clearInterval(slotIntervalId);
+		store.dispatch(setSlotIntervalId(null));
+	} catch (error) {
+		console.log('Error <stopFetchSlots>:\n', error, '\n', error.stack);
+		floatingNotify('Something Went Wrong!');
+	}
+};
+
+/* export const download = async (appointment_id) => {
+    try {
+        const res = await axios({
+			method: 'get',
+			url: 'appointment/appointmentslip/download',
+			params: { appointment_id },
+			headers: {
+				'Content-Type': 'application/json',
+				Accept: 'application/pdf',
+			},
+			responseType: 'arraybuffer',
+		});
+		const url = window.URL.createObjectURL(new Blob([res.data]));
+		const link = document.createElement('a');
+		link.href = url;
+		link.setAttribute('download', 'Appointment_slip.pdf');
+		document.body.appendChild(link);
+		link.click();
+    } catch (error) {
+        console.log('Error <download>:\n', error, '\n', error.stack);
+		floatingNotify('Something Went Wrong!');
+    }
+} */
 
 export const getBeneficiaries = async () => {
 	const state = store.getState();

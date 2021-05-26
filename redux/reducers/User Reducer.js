@@ -25,7 +25,6 @@ const initialState = {
 	prefferedVaccine: null,
 	fees: null,
 	prefferedTime: 1,
-	uniqueID: null,
 	date: null,
 	set: 0,
 	firebaseToken: null,

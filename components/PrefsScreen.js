@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { StyleSheet, Text, View, TextInput, TouchableOpacity, ScrollView, Switch, Dimensions } from 'react-native';
 import { Picker } from '@react-native-picker/picker';
 import { NeomorphFlex } from 'react-native-neomorph-shadows';
-import DeviceInfo from 'react-native-device-info';
 import axios from 'axios';
 import isEmpty from '../utils/isEmpty';
 import { useDispatch, useSelector } from 'react-redux';
@@ -13,7 +12,6 @@ const PrefsScreen = ({ navigation }) => {
     const dispatch = useDispatch();
 	const prefs = useSelector((state) => state.user);
 
-	const [name, setName] = useState(prefs.name);
 	const [number, setNumber] = useState(prefs.mobile);
 	const [is45Plus, setIs45Plus] = useState(prefs.is45Plus);
 	const [PIN, setPIN] = useState(prefs.pin);
@@ -54,25 +52,20 @@ const PrefsScreen = ({ navigation }) => {
 	const onChangeAge = () => setIs45Plus((previousState) => !previousState);
 
 	const onSubmit = async () => {
-		const uniqueID = await DeviceInfo.getUniqueId();
 		const details = {
 			mobile: number,
 			pin: PIN,
 			state: selectedState,
 			district: districtID,
 			firebaseToken: prefs.firebaseToken,
-			// firebaseToken: await getItem('@firebasePushToken'),
-			name,
 			is45Plus,
 			prefferedVaccine,
 			fees,
 			prefferedTime,
-			uniqueID,
 			dose,
 		};
 		try {
             dispatch(setUserPrefs(details));
-			// await setItem('@usrPrefs', details);
 			navigation.navigate('HomeScreen');
 		} catch (error) {
 			console.error(error);
@@ -87,9 +80,6 @@ const PrefsScreen = ({ navigation }) => {
 			<View style={{ ...styles.section, marginTop: 80 }}>
 				<Text style={styles.sectionText}>Login Info:</Text>
 				<NeomorphFlex swapShadows style={styles.neomorphBox}>
-					<TextInput style={styles.input} onChangeText={setName} value={name} placeholder='Name' />
-				</NeomorphFlex>
-				<NeomorphFlex swapShadows style={styles.neomorphBox}>
 					<TextInput
 						style={styles.input}
 						onChangeText={setNumber}
@@ -99,7 +89,7 @@ const PrefsScreen = ({ navigation }) => {
 					/>
 				</NeomorphFlex>
 				<View style={styles.btnUnit}>
-					<Text>Are you 45+ ?</Text>
+					<Text>Are the considered dependents 45+ ?</Text>
 					<View style={styles.btnWrapper}>
 						<Text style={styles.btnOptionText}>No</Text>
 						<Switch
@@ -148,10 +138,31 @@ const PrefsScreen = ({ navigation }) => {
 						style={styles.input}
 						onChangeText={setPIN}
 						value={PIN}
-						placeholder='Preffered Pincodes (Leave empty for anywhere in city)'
+						placeholder='Preffered Pincodes (separated by comma)'
 						keyboardType='numeric'
 					/>
 				</NeomorphFlex>
+				<Text style={{ ...styles.btnOptionText, marginTop: 5 }}>
+					➤ Leave the Pincode field empty, to look for slots anywhere in the city.
+				</Text>
+			</View>
+			<View style={styles.section}>
+				<Text style={styles.sectionText}>Slot Booking Preferences:</Text>
+				<Text style={{ ...styles.btnOptionText, marginTop: 5 }}>Time Preference:</Text>
+				<View style={styles.btnGroup}>
+					<TouchableOpacity style={styles.btn} onPress={() => setPrefferedTime(1)}>
+						<Text style={styles.btnText}>09:00AM - 11:00AM</Text>
+					</TouchableOpacity>
+					<TouchableOpacity style={styles.btn} onPress={() => setPrefferedTime(2)}>
+						<Text style={styles.btnText}>11:00AM - 01:00PM</Text>
+					</TouchableOpacity>
+					<TouchableOpacity style={styles.btn} onPress={() => setPrefferedTime(3)}>
+						<Text style={styles.btnText}>01:00PM - 03:00PM</Text>
+					</TouchableOpacity>
+					<TouchableOpacity style={styles.btn} onPress={() => setPrefferedTime(4)}>
+						<Text style={styles.btnText}>03:00PM - 05:00PM</Text>
+					</TouchableOpacity>
+				</View>
 			</View>
 			<View style={styles.section}>
 				<Text style={styles.sectionText}>Optional Preferences:</Text>
@@ -171,24 +182,6 @@ const PrefsScreen = ({ navigation }) => {
 					</TouchableOpacity>
 					<TouchableOpacity style={styles.btn} onPress={() => setFees('paid')}>
 						<Text style={styles.btnText}>Paid</Text>
-					</TouchableOpacity>
-				</View>
-			</View>
-			<View style={styles.section}>
-				<Text style={styles.sectionText}>Slot Booking Preferences:</Text>
-				<Text style={{ ...styles.btnOptionText, marginTop: 5 }}>Time Preference:</Text>
-				<View style={styles.btnGroup}>
-					<TouchableOpacity style={styles.btn} onPress={() => setPrefferedTime(1)}>
-						<Text style={styles.btnText}>09:00AM - 11:00AM</Text>
-					</TouchableOpacity>
-					<TouchableOpacity style={styles.btn} onPress={() => setPrefferedTime(2)}>
-						<Text style={styles.btnText}>11:00AM - 01:00PM</Text>
-					</TouchableOpacity>
-					<TouchableOpacity style={styles.btn} onPress={() => setPrefferedTime(3)}>
-						<Text style={styles.btnText}>01:00PM - 03:00PM</Text>
-					</TouchableOpacity>
-					<TouchableOpacity style={styles.btn} onPress={() => setPrefferedTime(4)}>
-						<Text style={styles.btnText}>03:00PM - 05:00PM</Text>
 					</TouchableOpacity>
 				</View>
 			</View>
@@ -268,7 +261,9 @@ const styles = StyleSheet.create({
 	btnWrapper: {
 		flexDirection: 'row',
 	},
-	btnOptionText: {},
+	btnOptionText: {
+        textAlign: 'justify',
+    },
 	btnGroup: {
 		flexDirection: 'row',
 		justifyContent: 'space-evenly',
