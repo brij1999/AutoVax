@@ -1,4 +1,4 @@
-rootProject.name = 'CoWIN_Automation'
+rootProject.name = 'AutoVax'
 include ':react-native-appearance'
 project(':react-native-appearance').projectDir = new File(rootProject.projectDir, '../node_modules/react-native-appearance/android')
 include ':react-native-date-picker'

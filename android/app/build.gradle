@@ -131,7 +131,7 @@ android {
     }
 
     defaultConfig {
-        applicationId "com.cowin_automation"
+        applicationId "com.brij1999.autovax"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode 1

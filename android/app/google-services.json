@@ -7,9 +7,9 @@
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:548458715952:android:270ff5a8c8cb7c73ebc6f5",
+        "mobilesdk_app_id": "1:548458715952:android:1291fd809b177275ebc6f5",
         "android_client_info": {
-          "package_name": "com.cowin_automation"
+          "package_name": "com.brij1999.autovax"
         }
       },
       "oauth_client": [

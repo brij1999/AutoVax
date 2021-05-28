@@ -7,11 +7,11 @@
 #define TIMEOUT_SECONDS 600
 #define TEXT_TO_LOOK_FOR @"Welcome to React"
 
-@interface CoWIN_AutomationTests : XCTestCase
+@interface AutoVaxTests : XCTestCase
 
 @end
 
-@implementation CoWIN_AutomationTests
+@implementation AutoVaxTests
 
 - (BOOL)findSubviewInView:(UIView *)view matching:(BOOL(^)(UIView *view))test
 {

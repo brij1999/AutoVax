@@ -31,8 +31,8 @@ export const setSlotIntervalId = (id) => (dispatch, getState) => {
 	dispatch({ type: SET_SLOT_INTERVAL_ID, payload: id });
 };
 
-export const setSlotDetails = (count, available, session) => (dispatch, getState) => {
-	dispatch({ type: SET_SLOT_DETAILS, payload: { count, available, session } });
+export const setSlotDetails = (count, available, session, c_id) => (dispatch, getState) => {
+	dispatch({ type: SET_SLOT_DETAILS, payload: { count, available, session, c_id } });
 };
 
 export const setBooking = (val) => (dispatch, getState) => {

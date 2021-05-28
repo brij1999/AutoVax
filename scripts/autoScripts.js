@@ -88,27 +88,30 @@ const check = async (centers) => {
 			return center['sessions'].some((s) => {
 				if (vaccine && vaccine !== s['vaccine']) return false;
 				return (
-					s[`available_capacity`] > 10 &&
-					s[`available_capacity_dose${prefs.dose}`] > 10 &&
+					s[`available_capacity`] > 0 &&
+					s[`available_capacity_dose${prefs.dose}`] > 0 &&
 					s['min_age_limit'] === age
 				);
 			});
 		});
+        
+        const c_id = available.length > 0 && getRandomInt(0, available.length - 1);
+        const s_id = available.length > 0 && getRandomInt(0, available[c_id]['sessions'].length - 1);
+		const session = available.length > 0 && available[c_id]['sessions'][s_id];
 
-		const session = available.length > 0 && available[getRandomInt(0, available.length - 1)]['sessions'][0];
-		store.dispatch(setSlotDetails(count, available, session));
+		store.dispatch(setSlotDetails(count, available, session, c_id));
 		console.log({ count, available, session });
 		if (count === 0) {
-			store.dispatch(setStatus(`No centers listed for ${age}+ age group found in your district 😔`, 'B'));
+			store.dispatch(setStatus(`No centers listed for ${age}+ age group found in your district 😕`, 'B'));
 		} else if (available.length === 0) {
 			store.dispatch(
 				setStatus(
-					`Found ${count} centers listed for ${age}+ age group in your district, and all of them are fully booked right now 😕`,
+					`Found ${count} centers listed for ${age}+ age group in your district, and all of them are fully booked right now 😔`,
 					'B',
 				),
 			);
 		} else {
-			const msg = `Found ${count} centers that have available slots listed for ${age}+ age group in your district.`;
+			const msg = `Found ${available.length} out of ${count} centers that have available slots listed for ${age}+ age group in your district!😀`;
 			store.dispatch(setStatus(msg, 'G'));
 			PushNotification.localNotification({
 				channelId: 'slot_info',
@@ -143,7 +146,7 @@ const getCaptcha = async () => {
 			if (!new RegExp('#').test(path.attrs.fill)) return;
 			let ENCODED_STRING = path.attrs.d.toUpperCase();
 			const INDEX = parseInt(new RegExp(/M(\d+)/).exec(ENCODED_STRING)[1]);
-			ENCODED_STRING = [...ENCODED_STRING.matchAll(/[A-Z]/g)].map((val) => val[0]);
+			ENCODED_STRING = ENCODED_STRING.match(/[A-Z]/g).map((val) => val[0]);
 			ENCODED_STRING = ENCODED_STRING.join('');
 			CAPTCHA.push([parseInt(INDEX), model[ENCODED_STRING]]);
 		});
@@ -173,8 +176,9 @@ const book = async () => {
 		try {
 			const res = await axios.post(API_SCHEDULE, { dose, session_id, slot, beneficiaries, captcha });
 			appointment_id = res.data['appointment_confirmation_no'];
-			store.dispatch(setStatus(`Congrats!!!\nSussessfully Booked Your Vaccination Slot. 🤘`, 'G'));
 			console.log('SUCCESS! ', { appointment_id });
+            floatingNotify('Appointment Booked!');
+			store.dispatch(setStatus(`Congrats!!!\nSussessfully Booked Your Vaccination Slot. 🤘`, 'G'));
 			PushNotification.localNotification({
 				channelId: 'slot_info',
 				autoCancel: true,
@@ -188,7 +192,7 @@ const book = async () => {
 				soundName: 'default',
 				actions: '["Open App"]',
 			});
-			const c = available[0];
+			const c = state.auto.available[state.auto.c_id];
 			store.dispatch(setBooking(c));
 		} catch (e) {
             if(isEmpty(e.response)) {

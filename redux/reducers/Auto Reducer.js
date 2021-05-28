@@ -17,6 +17,7 @@ const initialState = {
 	slotIntervalId: null,
 	available: [],
 	count: 0,
+    c_id: null,
 	session: null,
 	booking: null,
 	status: 'Set Preferences to Continue.',

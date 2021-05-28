@@ -1,4 +1,4 @@
 <resources>
-    <string name="app_name">CoWIN_Automation</string>
+    <string name="app_name">AutoVax</string>
     <string name="captcha_capture">captcha_capture</string>
 </resources>

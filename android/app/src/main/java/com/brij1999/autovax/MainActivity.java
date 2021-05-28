@@ -1,4 +1,4 @@
-package com.cowin_automation;
+package com.brij1999.autovax;
 import android.os.Bundle; // here
 import com.facebook.react.ReactActivity;
 import org.devio.rn.splashscreen.SplashScreen; // here
@@ -11,7 +11,7 @@ public class MainActivity extends ReactActivity {
    */
   @Override
   protected String getMainComponentName() {
-    return "CoWIN_Automation";
+    return "AutoVax";
   }
 
   @Override
